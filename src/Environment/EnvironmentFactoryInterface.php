@@ -1,13 +1,13 @@
 <?php
 /**
  * @file
- * Contains \TerraCore\Project\Instance\ProjectInstanceFactoryInterface.php
+ * Contains \TerraCore\Environment\EnvironmentFactoryInterface.php
  */
 
-namespace TerraCore\Project\Instance;
+namespace TerraCore\Environment;
 
 
-interface ProjectInstanceFactoryInterface {
+interface EnvironmentFactoryInterface {
 
   public function build();
 

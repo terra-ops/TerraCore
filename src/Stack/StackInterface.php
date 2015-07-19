@@ -13,9 +13,9 @@ interface StackInterface {
 
   public function getDockerComposeArray();
 
-  public function getPort();
+  public function getUrl();
 
-  public function getHost();
+  public function getPort();
 
   public function getScale();
 

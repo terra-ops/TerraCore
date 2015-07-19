@@ -1,0 +1,30 @@
+{
+  "name": "terra/terra-core",
+  "description": "Core terra engine",
+  "type": "project",
+  "require": {
+    "php": ">=5.5.9",
+    "symfony/config": "~2.6",
+    "symfony/filesystem": "~2.6",
+    "symfony/process": "~2.6",
+    "symfony/yaml": "~2.6",
+    "cpliakas/git-wrapper": "~1.4",
+    "teqneers/php-stream-wrapper-for-git": "~1.0"
+  },
+  "authors": [
+    {
+      "name": "Jon Pugh",
+      "email": "jon@thinkdrop.net"
+    },
+    {
+      "name": "Kris Vanderwater",
+      "email": "kris@meridian-ds.com"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/terra-ops/terra-core/issues"
+  },
+  "autoload": {
+    "psr-4": { "TerraCore\\": "src/" }
+  }
+}

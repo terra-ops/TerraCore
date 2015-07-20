@@ -1,10 +1,10 @@
 <?php
 /**
  * @file
- * Contains \TerraCore\Environment\EnvironmentFactoryInterface.php
+ * Contains \TerraCore\Environment\Factory\EnvironmentFactoryInterface.php
  */
 
-namespace TerraCore\Environment;
+namespace TerraCore\Environment\Factory;
 
 
 interface EnvironmentFactoryInterface {

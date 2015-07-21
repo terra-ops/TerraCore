@@ -7,6 +7,10 @@
 namespace TerraCore\Project;
 
 
+use GitWrapper\GitException;
+use GitWrapper\GitWorkingCopy;
+use GitWrapper\GitWrapper;
+use Psr\Log\LoggerInterface;
 use TerraCore\Environment\Environment;
 
 class GitProject implements ProjectInterface {
@@ -97,6 +101,50 @@ class GitProject implements ProjectInterface {
    */
   public function getDockerCompose($key) {
     return $this->overrides[$key];
+  }
+
+  public function build(LoggerInterface $logger, $path) {
+
+    // Check if clone already exists at this path. If so we can safely skip.
+    if (file_exists($path)) {
+      $wrapper = new GitWrapper();
+
+      try {
+        $working_copy = new GitWorkingCopy($wrapper, $path);
+        $output = $working_copy->remote('-v');
+      } catch (GitException $e) {
+        throw new \Exception('Path already exists.');
+      }
+
+      // if repo exists in the remotes already, this working copy is ok.
+      if (strpos(strtolower($output), strtolower($this->getRepo())) !== false) {
+        return true;
+      } else {
+        throw new \Exception('Git clone already exists at that path, but it is not for this app.');
+      }
+    }
+
+    try {
+      mkdir($path, 0755, TRUE);
+      chdir($path);
+      $wrapper = new GitWrapper();
+      $wrapper->streamOutput();
+      $wrapper->cloneRepository($this->getRepo(), $path);
+    } catch (\GitWrapper\GitException $e) {
+      return false;
+    }
+
+    chdir($path);
+    $logger->info($wrapper->git('branch'));
+    $logger->info($wrapper->git('status'));
+  }
+
+  public function enable(LoggerInterface $logger) {
+    // TODO: Implement enable() method.
+  }
+
+  public function deploy(LoggerInterface $logger) {
+    // TODO: Implement deploy() method.
   }
 
 }

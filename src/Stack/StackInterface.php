@@ -9,6 +9,11 @@ namespace TerraCore\Stack;
 
 interface StackInterface {
 
+  /**
+   * @return \TerraCore\Environment\EnvironmentInterface
+   */
+  public function getEnvironment();
+
   public function getDockerComposePath();
 
   public function getDockerComposeArray();
@@ -18,5 +23,7 @@ interface StackInterface {
   public function getPort();
 
   public function getScale();
+
+  public function generateDockerComposeFile();
 
 }

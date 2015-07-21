@@ -7,6 +7,8 @@
 namespace TerraCore\Project;
 
 
+use Psr\Log\LoggerInterface;
+
 interface ProjectInterface {
 
   /**
@@ -22,15 +24,6 @@ interface ProjectInterface {
    * @return string
    */
   public function getDescription();
-
-  /**
-   * @todo seems like this should be a getTerra() method since an app is really
-   * just the .terra.yml file + associated helper files and could be stored in
-   * any fashion, not just in git repositories.
-   *
-   * @return mixed
-   */
-  public function getRepo();
 
   /**
    * Get all Environments for this project.
@@ -56,5 +49,11 @@ interface ProjectInterface {
    * @return []
    */
   public function getDockerCompose($key);
+
+  public function build(LoggerInterface $logger, $path);
+
+  public function enable(LoggerInterface $logger);
+
+  public function deploy(LoggerInterface $logger);
 
 }

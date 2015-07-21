@@ -7,7 +7,10 @@
 namespace TerraCore\Stack;
 
 
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
+use Symfony\Component\Yaml\Dumper;
 
 class TerraDrupalStack extends StackBase {
 
@@ -136,6 +139,27 @@ class TerraDrupalStack extends StackBase {
     $lines = explode(PHP_EOL, $container_list);
     $app_scale = count($lines);
     return $app_scale;
+  }
+
+  public function generateDockerComposeFile() {
+    // Create the app/environment folder
+    $fs = new Filesystem();
+    try {
+      $fs->mkdir($this->getDockerComposePath());
+    } catch (IOExceptionInterface $e) {
+      return false;
+    }
+
+    // Create the environments docker-compose file.
+    $dumper = new Dumper();
+    try {
+      $fs->remove($this->getDockerComposePath().'/docker-compose.yml');
+      $fs->dumpFile($this->getDockerComposePath().'/docker-compose.yml', $dumper->dump($this->getDockerComposeArray(), 10));
+
+      return true;
+    } catch (IOExceptionInterface $e) {
+      return false;
+    }
   }
 
 }

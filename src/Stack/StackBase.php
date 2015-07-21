@@ -19,6 +19,10 @@ abstract class StackBase implements StackInterface {
     $this->environment = $environment;
   }
 
+  public function getEnvironment() {
+    return $this->environment;
+  }
+
   protected function mergeDockerComposeProjectOverrides(array $compose) {
     $project = $this->environment->getProject();
 

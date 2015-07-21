@@ -30,48 +30,16 @@ class EnvironmentFactory implements EnvironmentFactoryInterface {
    */
   protected $stack;
 
-  public function __construct(LoggerInterface $logger, EnvironmentInterface $environment, StackInterface $stack) {
+  public function __construct(LoggerInterface $logger, StackInterface $stack) {
     $this->logger = $logger;
-    $this->environment = $environment;
+    $this->environment = $stack->getEnvironment();
     $this->stack = $stack;
   }
 
   public function build() {
-    $path = is_null($path) ? $this->environment->path : $path;
+    $project = $this->environment->getProject();
+    $project->build($this->logger, $this->environment->getPath());
 
-    // Check if clone already exists at this path. If so we can safely skip.
-    if (file_exists($path)) {
-      $wrapper = new GitWrapper();
-
-      try {
-        $working_copy = new GitWorkingCopy($wrapper, $path);
-        $output = $working_copy->remote('-v');
-      } catch (GitException $e) {
-        throw new \Exception('Path already exists.');
-      }
-
-      // if repo exists in the remotes already, this working copy is ok.
-      if (strpos(strtolower($output), strtolower($this->app->repo)) !== false) {
-        return true;
-      } else {
-        throw new Exception('Git clone already exists at that path, but it is not for this app.');
-      }
-    }
-
-    try {
-      mkdir($path, 0755, TRUE);
-      chdir($path);
-      $wrapper = new GitWrapper();
-      $wrapper->streamOutput();
-      $wrapper->cloneRepository($this->app->repo . '.git', $path);
-    } catch (\GitWrapper\GitException $e) {
-      return false;
-    }
-
-    chdir($path);
-    $wrapper->git('branch');
-    $wrapper->git('status');
-    $this->loadConfig();
 
     // Run the build hooks
     if (!empty($this->config['hooks']['build'])) {
@@ -85,9 +53,10 @@ class EnvironmentFactory implements EnvironmentFactoryInterface {
           echo $buffer;
         }
       });
+      $this->logProcessOutput($process);
     }
 
-    return $this->writeConfig();
+    return $this->stack->generateDockerComposeFile();
   }
 
   public function deploy() {
@@ -104,7 +73,7 @@ class EnvironmentFactory implements EnvironmentFactoryInterface {
         echo 'DOCKER > '.$buffer;
       }
     });
-    return $this->logProcessOutput();
+    return $this->logProcessOutput($process);
   }
 
   public function disable() {

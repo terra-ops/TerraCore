@@ -11,7 +11,11 @@ use GitWrapper\GitException;
 use GitWrapper\GitWorkingCopy;
 use GitWrapper\GitWrapper;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Yaml\Yaml;
 use TerraCore\Environment\Environment;
+use TerraCore\Environment\EnvironmentInterface;
 
 class GitProject implements ProjectInterface {
 
@@ -28,6 +32,11 @@ class GitProject implements ProjectInterface {
   /**
    * @var array
    */
+  protected $hooks;
+
+  /**
+   * @var array
+   */
   protected $rawEnvironments;
 
   /**
@@ -40,9 +49,10 @@ class GitProject implements ProjectInterface {
    */
   protected $overrides;
 
-  function __construct($name, $description, array $environments = [], array $overrides = []) {
+  function __construct($name, $description, array $hooks = [], array $environments = [], array $overrides = []) {
     $this->name = $name;
     $this->description = $description;
+    $this->hooks = $hooks;
     $this->rawEnvironments = $environments;
     $this->overrides = $overrides;
   }
@@ -143,8 +153,52 @@ class GitProject implements ProjectInterface {
     // TODO: Implement enable() method.
   }
 
-  public function deploy(LoggerInterface $logger) {
-    // TODO: Implement deploy() method.
+  public function deploy($version, EnvironmentInterface $environment, LoggerInterface $logger) {
+    // Checkout the branch
+    $wrapper = new GitWrapper();
+    $wrapper->streamOutput();
+    $git = new GitWorkingCopy($wrapper, $environment->getPath());
+    $git->checkout($version);
+    $git->pull();
+    // Reload config so any changes get picked up.
+    $this->reload($environment);
+  }
+
+  public function invokeHook($hook) {
+    // Run the build hooks
+    if (!empty($this->hooks[$hook])) {
+      $process = new Process($this->hooks[$hook]);
+      $process->setTimeout(NULL);
+      $process->run(function ($type, $buffer) {
+        if (Process::ERR === $type) {
+          echo $buffer;
+        } else {
+          echo $buffer;
+        }
+      });
+      return $process;
+    }
+  }
+
+  /**
+   * Reload this project instance with any changes from the .terra.yml file.
+   *
+   * @param \TerraCore\Environment\EnvironmentInterface $environment
+   */
+  protected function reload(EnvironmentInterface $environment) {
+    // Look for .terra.yml
+    $fs = new Filesystem();
+    if ($fs->exists($environment->getPath().'/.terra.yml')) {
+      // Process any string replacements.
+      $environment_config_string = file_get_contents($environment->getPath().'/.terra.yml');
+      $config = Yaml::parse(strtr($environment_config_string, array(
+        '{{alias}}' => "@{$this->getName()}.{$environment->getName()}",
+      )));
+      $this->name = isset($config['name']) ? $config['name'] : $this->name;
+      $this->description = isset($config['description']) ? $config['description'] : $this->description;
+      $this->hooks = isset($config['hooks']) ? $config['hooks'] : $this->hooks;
+      $this->overrides = isset($config['overrides']) ? $config['overrides'] : $this->overrides;
+    }
   }
 
 }

@@ -8,6 +8,7 @@ namespace TerraCore\Project;
 
 
 use Psr\Log\LoggerInterface;
+use TerraCore\Environment\EnvironmentInterface;
 
 interface ProjectInterface {
 
@@ -54,6 +55,13 @@ interface ProjectInterface {
 
   public function enable(LoggerInterface $logger);
 
-  public function deploy(LoggerInterface $logger);
+  public function deploy($version, EnvironmentInterface $environment, LoggerInterface $logger);
+
+  /**
+   * @param $hook
+   *
+   * @return \Symfony\Component\Process\Process|NULL
+   */
+  public function invokeHook($hook);
 
 }

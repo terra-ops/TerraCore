@@ -14,9 +14,14 @@ interface StackInterface {
    */
   public function getEnvironment();
 
-  public function getDockerComposePath();
+  /**
+   * @return \Psr\Log\LoggerInterface
+   */
+  public function getLogger();
 
-  public function getDockerComposeArray();
+  public function getConfigPath();
+
+  public function getConfig();
 
   public function getUrl();
 
@@ -24,6 +29,11 @@ interface StackInterface {
 
   public function getScale();
 
-  public function generateDockerComposeFile();
+  public function generateConfigFile();
+
+  /**
+   * @return \TerraCore\Environment\Factory\EnvironmentFactoryInterface
+   */
+  public function getEnvironmentFactory();
 
 }

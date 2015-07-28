@@ -11,14 +11,15 @@ use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Dumper;
+use TerraCore\Environment\Factory\DockerComposeEnvironmentFactory;
 
-class TerraDrupalStack extends StackBase {
+class TerraDrupalStack extends DockerComposeStack {
 
-  public function getDockerComposePath() {
+  public function getConfigPath() {
     return getenv('HOME').'/.terra/environments/'.$this->environment->getProject()->getName().'/'.$this->environment->getProject()->getName().'-'.$this->environment->getName();
   }
 
-  public function getDockerComposeArray() {
+  public function getConfig() {
     // Look for this users SSH public key
     // @TODO: Move ssh_authorized_keys to terra config.  Ask the user on first run.
     $ssh_key_path = $_SERVER['HOME'].'/.ssh/id_rsa.pub';
@@ -118,11 +119,13 @@ class TerraDrupalStack extends StackBase {
   }
 
   public function getPort() {
-    $process = new Process('docker-compose port load 80', $this->getDockerComposePath());
+    $process = new Process('docker-compose port load 80', $this->getConfigPath());
     $process->run();
     if (!$process->isSuccessful()) {
+      $this->logger->error($process->getErrorOutput());
       return false;
     } else {
+      $this->logger->info($process->getOutput());
       $output_array = explode(':', trim($process->getOutput()));
       return array_pop($output_array);
     }
@@ -130,36 +133,48 @@ class TerraDrupalStack extends StackBase {
 
   public function getScale() {
     // Get current scale of app service
-    $process = new Process('docker-compose ps -q app', $this->getDockerComposePath());
+    $process = new Process('docker-compose ps -q app', $this->getConfigPath());
     $process->run();
     if (!$process->isSuccessful()) {
+      $this->logger->error($process->getErrorOutput());
       return false;
     }
+    $this->logger->info($process->getOutput());
     $container_list = trim($process->getOutput());
     $lines = explode(PHP_EOL, $container_list);
     $app_scale = count($lines);
     return $app_scale;
   }
 
-  public function generateDockerComposeFile() {
+  public function generateConfigFile() {
     // Create the app/environment folder
     $fs = new Filesystem();
     try {
-      $fs->mkdir($this->getDockerComposePath());
+      $fs->mkdir($this->getConfigPath());
     } catch (IOExceptionInterface $e) {
+      $this->logger->error($e->getMessage());
       return false;
     }
 
     // Create the environments docker-compose file.
     $dumper = new Dumper();
     try {
-      $fs->remove($this->getDockerComposePath().'/docker-compose.yml');
-      $fs->dumpFile($this->getDockerComposePath().'/docker-compose.yml', $dumper->dump($this->getDockerComposeArray(), 10));
+      $fs->remove($this->getConfigPath().'/docker-compose.yml');
+      $fs->dumpFile($this->getConfigPath().'/docker-compose.yml', $dumper->dump($this->getConfig(), 10));
+      $this->logger->info("docker-compose.yml file successfully created.");
 
       return true;
     } catch (IOExceptionInterface $e) {
+      $this->logger->error($e->getMessage());
       return false;
     }
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function getEnvironmentFactory() {
+    return new DockerComposeEnvironmentFactory($this->logger, $this);
   }
 
 }

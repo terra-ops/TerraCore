@@ -8,17 +8,22 @@ namespace TerraCore\Environment\Factory;
 
 
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
-use TerraCore\Environment\EnvironmentInterface;
 use TerraCore\Stack\StackInterface;
 
-class EnvironmentFactory implements EnvironmentFactoryInterface {
+class DockerComposeEnvironmentFactory implements EnvironmentFactoryInterface {
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
+
+  /**
+   * @var \TerraCore\Project\ProjectInterface
+   */
+  protected $project;
 
   /**
    * @var \TerraCore\Environment\EnvironmentInterface
@@ -33,38 +38,31 @@ class EnvironmentFactory implements EnvironmentFactoryInterface {
   public function __construct(LoggerInterface $logger, StackInterface $stack) {
     $this->logger = $logger;
     $this->environment = $stack->getEnvironment();
+    $this->project = $this->environment->getProject();
     $this->stack = $stack;
   }
 
   public function build() {
-    $project = $this->environment->getProject();
-    $project->build($this->logger, $this->environment->getPath());
-
-
+    $this->project->build($this->logger, $this->environment->getPath());
     // Run the build hooks
-    if (!empty($this->config['hooks']['build'])) {
-      chdir($this->getSourcePath());
-      $process = new Process($this->config['hooks']['build']);
-      $process->setTimeout(6000);
-      $process->run(function ($type, $buffer) {
-        if (Process::ERR === $type) {
-          echo $buffer;
-        } else {
-          echo $buffer;
-        }
-      });
-      $this->logProcessOutput($process);
-    }
+    $process = $this->project->invokeHook('build');
+    $this->logProcessOutput($process);
 
-    return $this->stack->generateDockerComposeFile();
+    $this->stack->generateConfigFile();
+    return $this->logger;
   }
 
-  public function deploy() {
-    // TODO: Implement deploy() method.
+  public function deploy($version) {
+    $this->project->deploy($version, $this->environment, $this->logger);
+
+    // Run the deploy hooks, if there are any.
+    $process = $this->project->invokeHook('deploy');
+    $this->logProcessOutput($process);
+    return $this->logger;
   }
 
   public function enable() {
-    $process = new Process('docker-compose up -d', $this->stack->getDockerComposePath());
+    $process = new Process('docker-compose up -d', $this->stack->getConfigPath());
     $process->setTimeout(null);
     $process->run(function ($type, $buffer) {
       if (Process::ERR === $type) {
@@ -73,7 +71,13 @@ class EnvironmentFactory implements EnvironmentFactoryInterface {
         echo 'DOCKER > '.$buffer;
       }
     });
-    return $this->logProcessOutput($process);
+    $this->logProcessOutput($process);
+
+    $this->project->enable($this->logger);
+    // Run the enable hooks
+    $process = $this->project->invokeHook('enable');
+    $this->logProcessOutput($process);
+    return $this->logger;
   }
 
   public function disable() {
@@ -86,9 +90,8 @@ class EnvironmentFactory implements EnvironmentFactoryInterface {
 
   public function destroy() {
     // Run docker-compose kill
-    echo "\n";
-    echo "Running 'docker-compose kill' in ".$this->stack->getDockerComposePath()."\n";
-    $process = new Process('docker-compose kill', $this->stack->getDockerComposePath());
+    $this->logger->info("Running 'docker-compose kill' in {$this->stack->getConfigPath()}");
+    $process = new Process('docker-compose kill', $this->stack->getConfigPath());
     $process->setTimeout(null);
     $process->run(function ($type, $buffer) {
       if (Process::ERR === $type) {
@@ -101,8 +104,8 @@ class EnvironmentFactory implements EnvironmentFactoryInterface {
 
     // Run docker-compose rm
     echo "\n";
-    echo "Running 'docker-compose rm -f' in ".$this->stack->getDockerComposePath()."\n";
-    $process = new Process('docker-compose rm -f', $this->stack->getDockerComposePath());
+    echo "Running 'docker-compose rm -f' in ".$this->stack->getConfigPath()."\n";
+    $process = new Process('docker-compose rm -f', $this->stack->getConfigPath());
     $process->setTimeout(null);
     $process->run(function ($type, $buffer) {
       if (Process::ERR === $type) {
@@ -113,8 +116,16 @@ class EnvironmentFactory implements EnvironmentFactoryInterface {
     });
     $this->logProcessOutput($process);
 
-    $fp = new Filesystem();
-    $fp->remove($this->stack->getDockerComposePath());
+    try {
+      $fp = new Filesystem();
+      $fp->remove($this->stack->getConfigPath());
+      $this->logger->info("Configuration directory successfully removed.");
+    }
+    catch (IOException $e) {
+      $this->logger->error("Configuration directory removal failure.");
+      $this->logger->error($e->getMessage());
+    }
+    return $this->logger;
   }
 
   public function scale() {
@@ -124,8 +135,9 @@ class EnvironmentFactory implements EnvironmentFactoryInterface {
   protected function logProcessOutput(Process $process) {
     if ($process->isSuccessful()) {
       $this->logger->info($process->getOutput());
-      return true;
+      return TRUE;
     }
-    $this->logger->info($process->getErrorOutput());
+    $this->logger->error($process->getErrorOutput());
+    return FALSE;
   }
 }

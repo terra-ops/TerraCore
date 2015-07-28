@@ -15,38 +15,44 @@ class Environment implements EnvironmentInterface {
    * @inheritDoc
    */
   function __construct($name, $path, $doc_root, $host, $url, $version, ProjectInterface $project) {
-    // TODO: Implement __construct() method.
+    $this->name = $name;
+    $this->path = $path;
+    $this->docRoot = $doc_root;
+    $this->host = $host;
+    $this->url = $url;
+    $this->version = $version;
+    $this->project = $project;
   }
 
   public function getName() {
-    // TODO: Implement getName() method.
+    return $this->name;
   }
 
   public function getPath() {
-    // TODO: Implement getPath() method.
+    return $this->path;
   }
 
   public function getDocumentRoot() {
-    // TODO: Implement getDocumentRoot() method.
+    return $this->docRoot;
   }
 
   public function getHost() {
-    // TODO: Implement getHost() method.
+    return $this->host;
   }
 
   public function getUrl() {
-    // TODO: Implement getUrl() method.
+    return $this->url;
   }
 
   public function getVersion() {
-    // TODO: Implement getVersion() method.
+    return $this->version;
   }
 
   /**
    * @inheritDoc
    */
   public function getProject() {
-    // TODO: Implement getProject() method.
+    return $this->project;
   }
 
 }

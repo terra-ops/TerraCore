@@ -52,6 +52,20 @@ class BaseProject implements ProjectInterface {
     $this->overrides = $overrides;
   }
 
+  public static function getInterfaceQuestions() {
+    $host_default = getenv('DOCKER_HOST') ? parse_url(getenv('DOCKER_HOST'), PHP_URL_HOST) : php_uname('n');
+
+    // Allow local.computer
+    if ($host_default == '192.168.99.100') {
+      $host_default = 'local.computer';
+    }
+    return [
+      ['System name of your project? ', ''],
+      ['Description? ', ''],
+      ['Host? [' . $host_default . '] ', $host_default],
+    ];
+  }
+
   /**
    * {@inheritdoc}
    */

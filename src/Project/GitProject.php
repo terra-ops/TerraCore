@@ -20,6 +20,16 @@ class GitProject extends BaseProject {
   /**
    * {@inheritdoc}
    */
+  public static function getInterfaceQuestions() {
+    $questions = [];
+    $questions[] = ['Source code repository URL? ', ''];
+    $questions += parent::getInterfaceQuestions();
+    return $questions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRepo() {
     // TODO: Implement getRepo() method.
   }

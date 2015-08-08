@@ -12,64 +12,10 @@ use GitWrapper\GitWorkingCopy;
 use GitWrapper\GitWrapper;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
-use TerraCore\Environment\Environment;
 use TerraCore\Environment\EnvironmentInterface;
 
-class GitProject implements ProjectInterface {
-
-  /**
-   * @var string
-   */
-  protected $name;
-
-  /**
-   * @var string
-   */
-  protected $description;
-
-  /**
-   * @var array
-   */
-  protected $hooks;
-
-  /**
-   * @var array
-   */
-  protected $rawEnvironments;
-
-  /**
-   * @var \TerraCore\Environment\EnvironmentInterface[]
-   */
-  protected $environments = [];
-
-  /**
-   * @var array
-   */
-  protected $overrides;
-
-  function __construct($name, $description, array $hooks = [], array $environments = [], array $overrides = []) {
-    $this->name = $name;
-    $this->description = $description;
-    $this->hooks = $hooks;
-    $this->rawEnvironments = $environments;
-    $this->overrides = $overrides;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getName() {
-    return $this->name;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getDescription() {
-    return $this->description;
-  }
+class GitProject extends BaseProject {
 
   /**
    * {@inheritdoc}
@@ -79,40 +25,12 @@ class GitProject implements ProjectInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * @param \Psr\Log\LoggerInterface $logger
+   * @param $path
+   *
+   * @return bool
+   * @throws \Exception
    */
-  public function getEnvironments() {
-    if (array_diff_key($this->rawEnvironments, $this->environments)) {
-      foreach ($this->rawEnvironments as $key => $values) {
-        if (!isset($this->environments[$key])) {
-          $this->environments[$key] = new Environment($values['name'], $values['path'], $values['document_root'], $values['host'], $values['url'], $values['version'], $this);
-        }
-      }
-    }
-    return $this->environments;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getEnvironment($environment) {
-    if (!isset($this->rawEnvironments[$environment])) {
-      throw new \Exception(sprintf("No such environment for project \"%s\"", $this->getName()));
-    }
-    if (!isset($this->environments[$environment])) {
-      $values = $this->rawEnvironments[$environment];
-      $this->environments[$environment] = new Environment($values['name'], $values['path'], $values['document_root'], $values['host'], $values['url'], $values['version'], $this);
-    }
-    return $this->environments[$environment];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getDockerCompose($key) {
-    return $this->overrides[$key];
-  }
-
   public function build(LoggerInterface $logger, $path) {
 
     // Check if clone already exists at this path. If so we can safely skip.
@@ -149,10 +67,6 @@ class GitProject implements ProjectInterface {
     $logger->info($wrapper->git('status'));
   }
 
-  public function enable(LoggerInterface $logger) {
-    // TODO: Implement enable() method.
-  }
-
   public function deploy($version, EnvironmentInterface $environment, LoggerInterface $logger) {
     // Checkout the branch
     $wrapper = new GitWrapper();
@@ -162,22 +76,6 @@ class GitProject implements ProjectInterface {
     $git->pull();
     // Reload config so any changes get picked up.
     $this->reload($environment);
-  }
-
-  public function invokeHook($hook) {
-    // Run the build hooks
-    if (!empty($this->hooks[$hook])) {
-      $process = new Process($this->hooks[$hook]);
-      $process->setTimeout(NULL);
-      $process->run(function ($type, $buffer) {
-        if (Process::ERR === $type) {
-          echo $buffer;
-        } else {
-          echo $buffer;
-        }
-      });
-      return $process;
-    }
   }
 
   /**

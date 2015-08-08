@@ -98,7 +98,7 @@ class TerraDrupalStack extends DockerComposeStack {
 
     $project = $this->environment->getProject();
     // Add "app_services": Additional containers linked to the app container.
-    foreach ($project->getDockerCompose('app_services') as $service => $info) {
+    foreach ($project->getStackModifications('app_services') as $service => $info) {
       $compose['app']['links'][] = $service;
 
       // Look for volume paths to change

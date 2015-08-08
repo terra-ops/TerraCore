@@ -45,17 +45,50 @@ interface ProjectInterface {
   /**
    * Allows projects to specificy StackInterface level changes and additions.
    *
+   * @param string $type
+   *   The type of stack modification. Each stack might have completely
+   *   different instructions to create the stack. Projects can support various
+   *   types of stacks i.e. docker-compose, kubernetes, etc.
+   *
    * @param string $key
    *
    * @return []
    */
-  public function getDockerCompose($key);
+  public function getStackModifications($type, $key);
 
+  /**
+   * @param \Psr\Log\LoggerInterface $logger
+   */
   public function build(LoggerInterface $logger, $path);
 
+  /**
+   * @param \Psr\Log\LoggerInterface $logger
+   */
   public function enable(LoggerInterface $logger);
 
+  /**
+   * @param string $version
+   *
+   * @param \TerraCore\Environment\EnvironmentInterface $environment
+   *
+   * @param \Psr\Log\LoggerInterface $logger
+   */
   public function deploy($version, EnvironmentInterface $environment, LoggerInterface $logger);
+
+  /**
+   * @param \Psr\Log\LoggerInterface $logger
+   */
+  public function disable(LoggerInterface $logger);
+
+  /**
+   * @param \Psr\Log\LoggerInterface $logger
+   */
+  public function duplicate(LoggerInterface $logger);
+
+  /**
+   * @param \Psr\Log\LoggerInterface $logger
+   */
+  public function destroy(LoggerInterface $logger);
 
   /**
    * @param $hook

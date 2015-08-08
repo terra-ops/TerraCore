@@ -13,7 +13,7 @@ abstract class DockerComposeStack extends StackBase {
     $project = $this->environment->getProject();
 
     // Add "overrides" to docker-compose.
-    foreach ($project->getDockerCompose('overrides') as $service => $info) {
+    foreach ($project->getStackModifications('overrides') as $service => $info) {
       $compose[$service] = array_merge_recursive($compose[$service], $info);
     }
     return $compose;

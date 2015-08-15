@@ -15,7 +15,7 @@ abstract class ConfigBase implements ConfigInterface {
    *
    * @var array
    */
-  private $config = array();
+  protected $config = array();
 
   /**
    * {@inheritdoc}

@@ -46,7 +46,9 @@ class DockerComposeEnvironmentFactory implements EnvironmentFactoryInterface {
     $this->project->build($this->logger, $this->environment->getPath());
     // Run the build hooks
     $process = $this->project->invokeHook('build');
-    $this->logProcessOutput($process);
+    if ($process) {
+      $this->logProcessOutput($process);
+    }
 
     $this->stack->generateConfigFile();
     return $this->logger;

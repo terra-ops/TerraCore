@@ -54,9 +54,10 @@ class BaseProject implements ProjectInterface {
    */
   protected $overrides;
 
-  function __construct($name, $description, array $hooks = [], array $environments = [], array $overrides = []) {
+  function __construct($name, $description, $location, array $hooks = [], array $environments = [], array $overrides = []) {
     $this->name = $name;
     $this->description = $description;
+    $this->location = $location;
     $this->hooks = $hooks;
     $this->rawEnvironments = $environments;
     $this->overrides = $overrides;

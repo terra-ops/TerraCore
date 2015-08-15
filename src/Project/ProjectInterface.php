@@ -25,11 +25,28 @@ interface ProjectInterface {
   public function getName();
 
   /**
+   * The type of project.
+   *
+   * @return string
+   */
+  public function getType();
+
+  /**
    * The description of this project.
    *
    * @return string
    */
   public function getDescription();
+
+  /**
+   * The string location of the project.
+   *
+   * In the case of a git project this would be the git repository url, in the
+   * case of a local project it would be the directory location.
+   *
+   * @return string
+   */
+  public function getLocation();
 
   /**
    * Get all Environments for this project.

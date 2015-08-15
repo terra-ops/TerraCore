@@ -17,6 +17,8 @@ use TerraCore\Environment\EnvironmentInterface;
 
 class GitProject extends BaseProject {
 
+  protected $type = 'git';
+
   /**
    * {@inheritdoc}
    */
@@ -25,13 +27,6 @@ class GitProject extends BaseProject {
     $questions[] = ['Source code repository URL? ', ''];
     $questions += parent::getInterfaceQuestions();
     return $questions;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRepo() {
-    // TODO: Implement getRepo() method.
   }
 
   /**
@@ -55,7 +50,7 @@ class GitProject extends BaseProject {
       }
 
       // if repo exists in the remotes already, this working copy is ok.
-      if (strpos(strtolower($output), strtolower($this->getRepo())) !== false) {
+      if (strpos(strtolower($output), strtolower($this->getLocation())) !== false) {
         return true;
       } else {
         throw new \Exception('Git clone already exists at that path, but it is not for this app.');
@@ -67,7 +62,7 @@ class GitProject extends BaseProject {
       chdir($path);
       $wrapper = new GitWrapper();
       $wrapper->streamOutput();
-      $wrapper->cloneRepository($this->getRepo(), $path);
+      $wrapper->cloneRepository($this->getLocation(), $path);
     } catch (\GitWrapper\GitException $e) {
       return false;
     }
@@ -75,6 +70,7 @@ class GitProject extends BaseProject {
     chdir($path);
     $logger->info($wrapper->git('branch'));
     $logger->info($wrapper->git('status'));
+    return true;
   }
 
   public function deploy($version, EnvironmentInterface $environment, LoggerInterface $logger) {

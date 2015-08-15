@@ -7,6 +7,7 @@ namespace TerraCore;
 
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use TerraCore\Environment\EnvironmentInterface;
+use TerraCore\Project\ProjectInterface;
 
 /**
  * Class Config.
@@ -79,11 +80,20 @@ interface ConfigInterface extends ConfigurationInterface {
   public function remove($key, $name);
 
   /**
+   * Saves a project to the config class.
+   *
+   * @param \TerraCore\Project\ProjectInterface $project
+   *
+   * @return bool
+   */
+  public function saveProject(ProjectInterface $project);
+
+  /**
    * Saves an environment to the config class.
    *
-   * Don't forget to call ::save() afterwards to save to file.
-   *
    * @param \TerraCore\Environment\EnvironmentInterface $environment
+   *
+   * @return bool
    */
   public function saveEnvironment(EnvironmentInterface $environment);
 

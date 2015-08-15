@@ -22,7 +22,17 @@ class BaseProject implements ProjectInterface {
   /**
    * @var string
    */
+  protected $type;
+
+  /**
+   * @var string
+   */
   protected $description;
+
+  /**
+   * @var string
+   */
+  protected $location;
 
   /**
    * @var array
@@ -73,11 +83,22 @@ class BaseProject implements ProjectInterface {
     return $this->name;
   }
 
+  public function getType() {
+    return $this->type;
+  }
+
   /**
    * {@inheritdoc}
    */
   public function getDescription() {
     return $this->description;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLocation() {
+    return $this->location;
   }
 
   /**

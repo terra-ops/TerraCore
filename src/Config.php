@@ -5,6 +5,7 @@ namespace TerraCore;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\Processor;
 use TerraCore\Environment\EnvironmentInterface;
+use TerraCore\Project\ProjectInterface;
 
 /**
  * Class Config.
@@ -52,14 +53,13 @@ abstract class ConfigBase implements ConfigInterface {
           ->scalarNode('name')
           ->isRequired(true)
           ->end()
+          ->scalarNode('type')
+          ->isRequired(true)
+          ->end()
           ->scalarNode('description')
           ->isRequired(false)
           ->end()
-          ->scalarNode('repo')
-          ->isRequired(true)
-          ->end()
-          ->scalarNode('host')
-          ->defaultValue('localhost')
+          ->scalarNode('location')
           ->isRequired(true)
           ->end()
           ->arrayNode('environments')
@@ -151,6 +151,13 @@ abstract class ConfigBase implements ConfigInterface {
     } else {
       return false;
     }
+  }
+
+  public function saveProject(ProjectInterface $project) {
+    $this->config[$project->getName()]['name'] = $project->getName();
+    $this->config[$project->getName()]['description'] = $project->getDescription();
+    $this->config[$project->getName()]['location'] = $project->getLocation();
+    $this->save();
   }
 
   /**

@@ -13,11 +13,6 @@ use TerraCore\Environment\EnvironmentInterface;
 interface ProjectInterface {
 
   /**
-   * @return array
-   */
-  public static function getInterfaceQuestions();
-
-  /**
    * The name of this project.
    *
    * @return string

@@ -1,5 +1,5 @@
 {
-  "name": "terra/terra-core",
+  "name": "terra/core",
   "description": "Core terra engine",
   "type": "project",
   "require": {
@@ -23,7 +23,7 @@
     }
   ],
   "support": {
-    "issues": "https://github.com/terra-ops/terra-core/issues"
+    "issues": "https://github.com/terra-ops/terra-cli/issues"
   },
   "autoload": {
     "psr-4": { "TerraCore\\": "src/" }
